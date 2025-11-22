@@ -196,6 +196,7 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
                 <PaymentModal
                     paymentMethod={orderData.paymentMethod}
                     amount={currentProduct.price}
+                    productName={currentProduct.name}
                     onSuccess={() => {
                         setShowPayment(false);
                         const orderId = 'MT' + Date.now().toString().slice(-8);

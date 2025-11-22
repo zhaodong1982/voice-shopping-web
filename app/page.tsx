@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { LoginPage } from '@/components/LoginPage';
 import { WeChatAuth } from '@/components/WeChatAuth';
+import { AlipayAuth } from '@/components/AlipayAuth';
 import { getUser, saveUser, logout, User } from '@/lib/auth';
 
 const ChatInterface = dynamic(
@@ -14,6 +15,7 @@ const ChatInterface = dynamic(
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [authMethod, setAuthMethod] = useState<'wechat' | 'alipay'>('wechat');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +25,8 @@ export default function Home() {
     setIsLoading(false);
   }, []);
 
-  const handleLoginClick = () => {
+  const handleLoginClick = (method: 'wechat' | 'alipay') => {
+    setAuthMethod(method);
     setShowAuth(true);
   };
 
@@ -31,6 +34,7 @@ export default function Home() {
     const newUser: User = {
       ...userData,
       loginTime: Date.now(),
+      loginMethod: authMethod,
     };
     saveUser(newUser);
     setUser(newUser);
@@ -54,7 +58,13 @@ export default function Home() {
     return (
       <>
         <LoginPage onLogin={handleLoginClick} />
-        {showAuth && <WeChatAuth onSuccess={handleAuthSuccess} />}
+        {showAuth && authMethod === 'wechat' && <WeChatAuth onSuccess={handleAuthSuccess} />}
+        {showAuth && authMethod === 'alipay' && (
+          <AlipayAuth 
+            onSuccess={handleAuthSuccess}
+            onCancel={() => setShowAuth(false)}
+          />
+        )}
       </>
     );
   }

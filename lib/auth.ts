@@ -3,9 +3,10 @@ export interface User {
     nickname: string;
     avatar: string;
     loginTime: number;
+    loginMethod?: 'wechat' | 'alipay'; // 登录方式
 }
 
-const USER_KEY = 'wechat_user';
+const USER_KEY = 'app_user'; // 修改为通用的 key
 
 // Simulated WeChat user data
 const MOCK_USERS = [

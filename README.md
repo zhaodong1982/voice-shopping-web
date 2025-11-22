@@ -1,8 +1,27 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 🎉 Features
+
+- 🎤 **语音交互** - 支持中文语音输入和语音播报
+- 🤖 **AI 对话** - 集成 Google Gemini AI 智能理解用户意图
+- 💳 **支付宝登录** - 真实支付宝授权登录
+- 💰 **支付宝支付** - 真实支付宝网站支付功能
+- ☕ **咖啡订购** - 支持瑞幸、星巴克等品牌
+- 📦 **美团集成** - 跳转美团外卖完成订单
+
 ## Getting Started
 
-First, run the development server:
+First, copy the environment variables example file:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Edit `.env.local` and add your API keys:
+- Google Gemini API key
+- Alipay credentials (see [ALIPAY_SETUP.md](./ALIPAY_SETUP.md) for detailed setup)
+
+Then, run the development server:
 
 ```bash
 npm run dev

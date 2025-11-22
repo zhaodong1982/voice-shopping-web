@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface LoginPageProps {
-    onLogin: () => void;
+    onLogin: (method: 'wechat' | 'alipay') => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
@@ -27,11 +27,20 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
                     {/* WeChat Login Button */}
                     <button
-                        onClick={onLogin}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-green-600/30"
+                        onClick={() => onLogin('wechat')}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-green-600/30 mb-3"
                     >
                         <span className="text-2xl">💚</span>
                         <span>微信登录</span>
+                    </button>
+
+                    {/* Alipay Login Button */}
+                    <button
+                        onClick={() => onLogin('alipay')}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-blue-600/30"
+                    >
+                        <span className="text-2xl">💙</span>
+                        <span>支付宝登录</span>
                     </button>
 
                     {/* Features */}
