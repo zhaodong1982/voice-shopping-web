@@ -1,0 +1,66 @@
+import '@testing-library/jest-dom';
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+    })),
+});
+
+// Mock localStorage
+const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+
+    return {
+        getItem: jest.fn((key: string) => store[key] || null),
+        setItem: jest.fn((key: string, value: string) => {
+            store[key] = value;
+        }),
+        removeItem: jest.fn((key: string) => {
+            delete store[key];
+        }),
+        clear: jest.fn(() => {
+            store = {};
+        }),
+    };
+})();
+
+global.localStorage = localStorageMock as any;
+
+// Mock SpeechSynthesis
+global.speechSynthesis = {
+    speak: jest.fn(),
+    cancel: jest.fn(),
+    pause: jest.fn(),
+    resume: jest.fn(),
+    getVoices: jest.fn(() => []),
+    speaking: false,
+    pending: false,
+    paused: false,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+} as any;
+
+// Mock SpeechRecognition
+(global as any).SpeechRecognition = jest.fn().mockImplementation(() => ({
+    start: jest.fn(),
+    stop: jest.fn(),
+    abort: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    continuous: false,
+    interimResults: false,
+    lang: '',
+    maxAlternatives: 1,
+}));
+
+(global as any).webkitSpeechRecognition = (global as any).SpeechRecognition;

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, MapPin, Phone, User } from 'lucide-react';
 import { Product } from './ProductCard';
+import { getDefaultAddress, saveAddress } from '@/lib/addressStorage';
 
 interface CheckoutModalProps {
     product: Product;
@@ -21,9 +22,27 @@ export function CheckoutModal({ product, onClose, onConfirm }: CheckoutModalProp
     const [address, setAddress] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<'wechat' | 'alipay'>('wechat');
 
+    // 加载默认地址
+    useEffect(() => {
+        const defaultAddr = getDefaultAddress();
+        if (defaultAddr) {
+            setName(defaultAddr.name);
+            setPhone(defaultAddr.phone);
+            setAddress(defaultAddr.address);
+        }
+    }, []);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (name && phone && address) {
+            // 保存地址
+            saveAddress({
+                name,
+                phone,
+                address,
+                isDefault: true,
+            });
+
             onConfirm({ name, phone, address, paymentMethod });
         }
     };
@@ -116,8 +135,8 @@ export function CheckoutModal({ product, onClose, onConfirm }: CheckoutModalProp
                                 type="button"
                                 onClick={() => setPaymentMethod('wechat')}
                                 className={`p-4 rounded-xl border-2 transition-all ${paymentMethod === 'wechat'
-                                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                        : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
+                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                    : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
                                     }`}
                             >
                                 <div className="text-2xl mb-2">💚</div>
@@ -127,8 +146,8 @@ export function CheckoutModal({ product, onClose, onConfirm }: CheckoutModalProp
                                 type="button"
                                 onClick={() => setPaymentMethod('alipay')}
                                 className={`p-4 rounded-xl border-2 transition-all ${paymentMethod === 'alipay'
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                        : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                    : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
                                     }`}
                             >
                                 <div className="text-2xl mb-2">💙</div>

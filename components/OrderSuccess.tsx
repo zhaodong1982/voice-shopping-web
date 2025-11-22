@@ -1,14 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle, Package, Clock } from 'lucide-react';
 import { Product } from './ProductCard';
+import { OrderData } from './CheckoutModal';
+import { saveOrder } from '@/lib/orderStorage';
 
 interface OrderSuccessProps {
     product: Product;
     orderNumber: string;
+    orderData: OrderData;
     onContinue: () => void;
 }
 
-export function OrderSuccess({ product, orderNumber, onContinue }: OrderSuccessProps) {
+export function OrderSuccess({ product, orderNumber, orderData, onContinue }: OrderSuccessProps) {
+    // 保存订单到历史
+    useEffect(() => {
+        saveOrder({
+            orderId: orderNumber,
+            product,
+            orderData,
+            timestamp: Date.now(),
+            status: 'completed',
+        });
+    }, [orderNumber, product, orderData]);
+
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
             <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl max-w-md w-full p-8 animate-in slide-in-from-bottom-4">

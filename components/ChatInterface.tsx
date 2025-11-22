@@ -10,6 +10,7 @@ import { PaymentModal } from './PaymentModal';
 import { OrderSuccess } from './OrderSuccess';
 import { searchMeituan, placeOrderMeituan } from '@/lib/china_api/meituanService';
 import { User } from '@/lib/auth';
+import { getPreferences, updatePreference } from '@/lib/preferencesStorage';
 
 interface Message {
     id: string;
@@ -41,10 +42,28 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    // 加载用户偏好
+    useEffect(() => {
+        const prefs = getPreferences();
+        if (prefs.selectedVoice && voices.length > 0) {
+            const voice = voices.find(v => v.name === prefs.selectedVoice);
+            if (voice) {
+                setSelectedVoice(voice);
+            }
+        }
+    }, [voices]);
+
+    // 保存语音选择偏好
+    useEffect(() => {
+        if (selectedVoice) {
+            updatePreference('selectedVoice', selectedVoice.name);
+        }
+    }, [selectedVoice]);
+
     // Auto-scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, currentProduct]);
+    }, [messages]);
 
     // Handle voice input end
     useEffect(() => {
@@ -111,13 +130,15 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
     };
 
     return (
-        <div className="flex flex-col h-[80vh] max-w-md mx-auto bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 relative">
+        <div className="flex flex-col h-[85vh] max-w-lg mx-auto bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden relative">
             {/* User Profile */}
             <UserProfile user={user} onLogout={onLogout} />
 
             {/* Header */}
-            <div className="p-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center relative">
-                <h1 className="font-semibold text-zinc-900 dark:text-white">咖啡助理 (Coffee AI)</h1>
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
+                <h1 className="text-lg font-medium text-zinc-900 dark:text-white text-center">
+                    咖啡助理
+                </h1>
                 <VoiceSelector
                     voices={voices}
                     selectedVoice={selectedVoice}
@@ -208,10 +229,11 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
             )}
 
             {/* Order Success Modal */}
-            {showSuccess && currentProduct && (
+            {showSuccess && currentProduct && orderData && (
                 <OrderSuccess
                     product={currentProduct}
                     orderNumber={orderNumber}
+                    orderData={orderData}
                     onContinue={() => {
                         setShowSuccess(false);
                         setCurrentProduct(null);
