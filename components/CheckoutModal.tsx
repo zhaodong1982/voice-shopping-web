@@ -68,7 +68,7 @@ export function CheckoutModal({ product, onClose, onConfirm }: CheckoutModalProp
                         <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">{product.description}</p>
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-zinc-600 dark:text-zinc-400">价格</span>
-                            <span className="text-xl font-bold text-blue-600 dark:text-blue-400">¥{product.price.toFixed(2)}</span>
+                            <span className="text-xl font-bold text-blue-600 dark:text-blue-400">¥{(product.price || 0).toFixed(2)}</span>
                         </div>
                     </div>
 
@@ -162,7 +162,7 @@ export function CheckoutModal({ product, onClose, onConfirm }: CheckoutModalProp
                         disabled={!name || !phone || !address}
                         className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors duration-200 active:scale-95 disabled:cursor-not-allowed"
                     >
-                        确认支付 ¥{product.price.toFixed(2)}
+                        确认支付 ¥{(product.price || 0).toFixed(2)}
                     </button>
                 </form>
             </div>

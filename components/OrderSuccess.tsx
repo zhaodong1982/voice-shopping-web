@@ -64,7 +64,7 @@ export function OrderSuccess({ product, orderNumber, orderData, onContinue }: Or
                     <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
                         <div className="flex items-center justify-between">
                             <span className="text-zinc-600 dark:text-zinc-400">实付金额</span>
-                            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">¥{product.price.toFixed(2)}</span>
+                            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">¥{(product.price || 0).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

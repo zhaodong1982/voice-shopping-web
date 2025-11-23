@@ -32,6 +32,7 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
     ]);
     const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [textInput, setTextInput] = useState('');
 
     // Purchase flow states
     const [showCheckout, setShowCheckout] = useState(false);
@@ -72,10 +73,55 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
         }
     }, [isListening, transcript]);
 
+    const handleVoiceSuccess = async (text: string) => {
+        stopListening();
+        // Add user message immediately
+        setMessages(prev => [...prev, { id: Date.now().toString(), text, isUser: true }]);
+        setIsProcessing(true);
+
+        try {
+            const response = await fetch('/api/gemini', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text,
+                    history: messages.map(m => ({
+                        role: m.isUser ? 'user' : 'model',
+                        parts: [{ text: m.text }]
+                    }))
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.product) {
+                setCurrentProduct(data.product);
+                addBotMessage(`I found this for you: ${data.product.name}`);
+            } else {
+                addBotMessage(data.reply || "Sorry, I couldn't find anything.");
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            addBotMessage("Sorry, I encountered an error. Please try again.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const handleTextSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        if (!textInput.trim()) return;
+        handleUserMessage(textInput);
+        setTextInput('');
+    };
+
     const handleUserMessage = async (text: string) => {
         if (!text.trim()) return;
 
         setIsProcessing(true);
+        console.log('Processing user message:', text);
 
         // Add user message
         const userMsg: Message = { id: Date.now().toString(), text, isUser: true };
@@ -86,29 +132,43 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
             const response = await fetch('/api/gemini', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text }),
+                body: JSON.stringify({
+                    text,
+                    history: messages.map(m => ({
+                        role: m.isUser ? 'user' : 'model',
+                        parts: [{ text: m.text }]
+                    }))
+                }),
             });
 
             const data = await response.json();
+            console.log('Gemini API response:', data);
 
-            // Use the AI's reply directly
-            addBotMessage(data.reply);
-
+            // 1. Search intent with product name (from 'product' field)
             if (data.intent === 'SEARCH' && data.product) {
+                console.log('Search intent detected with product:', data.product);
                 const product = await searchMeituan(data.product);
                 if (product) {
                     setCurrentProduct(product);
+                    addBotMessage(data.reply || `I found this for you: ${product.name}`);
+                } else {
+                    addBotMessage(data.reply || "Sorry, I couldn't find anything.");
                 }
-            } else if (data.intent === 'CONFIRM') {
-                if (currentProduct) {
-                    const result = await placeOrderMeituan(currentProduct);
-                    addBotMessage(`好的！正在为您打开美团外卖...`);
-                    window.location.href = result.deepLink;
-                    setCurrentProduct(null);
+            }
+            // 2. Fallback: Treat as generic search if no specific intent but text implies search
+            else {
+                console.log('No specific intent, trying generic search for:', text);
+                // Try to search with the raw text
+                const product = await searchMeituan(text);
+                if (product) {
+                    setCurrentProduct(product);
+                    addBotMessage(data.reply || `I found this for you: ${product.name}`);
+                } else {
+                    addBotMessage(data.reply || "Sorry, I couldn't find anything.");
                 }
             }
         } catch (error) {
-            console.error(error);
+            console.error('Error in handleUserMessage:', error);
             addBotMessage("抱歉，连接大脑失败了。");
         }
 
@@ -169,8 +229,49 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
                     <div className="flex justify-center py-4">
                         <ProductCard
                             product={currentProduct}
-                            onConfirm={() => {
-                                setShowCheckout(true);
+                            onConfirm={async () => {
+                                // For generic search, open Meituan directly
+                                if (currentProduct.id === 'generic-search') {
+                                    // Open window immediately to avoid popup blocker
+                                    const newWindow = window.open('about:blank', '_blank');
+
+                                    try {
+                                        const result = await placeOrderMeituan(currentProduct);
+                                        addBotMessage(`正在为您打开美团外卖搜索...`);
+
+                                        if (newWindow) {
+                                            // 检测设备类型
+                                            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                                            if (isMobile && result.deepLink) {
+                                                // 移动端：尝试打开APP Deep Link
+                                                newWindow.location.href = result.deepLink;
+
+                                                // 2秒后如果还在空白页，说明APP未安装，使用网页版首页兜底
+                                                setTimeout(() => {
+                                                    // 优先使用 mobileWebLink (首页)，如果没有则用 webLink
+                                                    const fallbackUrl = result.mobileWebLink || result.webLink;
+                                                    if (fallbackUrl && newWindow.location.href === 'about:blank') {
+                                                        newWindow.location.href = fallbackUrl;
+                                                    }
+                                                }, 2000);
+                                            } else {
+                                                // 桌面端：直接使用网页版
+                                                newWindow.location.href = result.webLink || result.deepLink;
+                                            }
+                                        }
+                                        setCurrentProduct(null);
+                                    } catch (error) {
+                                        // Close the window if there's an error
+                                        if (newWindow) {
+                                            newWindow.close();
+                                        }
+                                        addBotMessage('抱歉，打开美团失败了');
+                                    }
+                                } else {
+                                    // For regular products, show checkout
+                                    setShowCheckout(true);
+                                }
                             }}
                         />
                     </div>
@@ -193,9 +294,31 @@ export function ChatInterface({ user, onLogout }: ChatInterfaceProps) {
                 <div className="h-8 text-sm text-zinc-500 font-medium text-center">
                     {voiceError ? (
                         <span className="text-red-500">⚠️ {voiceError}</span>
-                    ) : isListening ? '正在听...' : isProcessing ? '思考中...' : '点击说话'}
+                    ) : isListening ? '正在听...' : isProcessing ? '思考中...' : '点击说话或输入文字'}
                 </div>
-                <VoiceOrb isListening={isListening} onClick={toggleListening} />
+
+                <div className="flex flex-col items-center gap-6 w-full max-w-md">
+                    <VoiceOrb isListening={isListening} onClick={toggleListening} />
+
+                    {/* Text Input Area */}
+                    <form onSubmit={handleTextSubmit} className="w-full flex gap-2">
+                        <input
+                            type="text"
+                            value={textInput}
+                            onChange={(e) => setTextInput(e.target.value)}
+                            placeholder="输入您的需求..."
+                            className="flex-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            disabled={isListening || isProcessing}
+                        />
+                        <button
+                            type="submit"
+                            disabled={!textInput.trim() || isListening || isProcessing}
+                            className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+                        >
+                            发送
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {/* Checkout Modal */}

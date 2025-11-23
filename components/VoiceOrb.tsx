@@ -9,6 +9,7 @@ interface VoiceOrbProps {
 export function VoiceOrb({ isListening, onClick }: VoiceOrbProps) {
     return (
         <button
+            data-testid="voice-orb-button"
             onClick={onClick}
             className={`relative flex items-center justify-center w-24 h-24 rounded-full transition-all duration-300 focus:outline-none ${isListening ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/50'
                 }`}

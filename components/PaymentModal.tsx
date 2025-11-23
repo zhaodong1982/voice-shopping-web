@@ -35,10 +35,10 @@ export function PaymentModal({ paymentMethod, amount, productName, onSuccess }: 
 
     const initiateAlipayPayment = async () => {
         setIsProcessing(true);
-        
+
         try {
             const outTradeNo = 'CF' + Date.now().toString();
-            
+
             const response = await fetch('/api/alipay/pay', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -102,7 +102,7 @@ export function PaymentModal({ paymentMethod, amount, productName, onSuccess }: 
                         <div className="mb-6">
                             <div className="text-5xl mb-3">{paymentEmoji}</div>
                             <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">{paymentName}</h2>
-                            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">¥{amount.toFixed(2)}</p>
+                            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">¥{(amount || 0).toFixed(2)}</p>
                         </div>
 
                         {/* QR Code Placeholder */}
@@ -130,7 +130,7 @@ export function PaymentModal({ paymentMethod, amount, productName, onSuccess }: 
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* 支付宝支付表单容器 */}
                         <div ref={paymentFormRef} style={{ display: 'none' }}></div>
                     </>

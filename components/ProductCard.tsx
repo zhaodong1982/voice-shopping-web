@@ -24,7 +24,7 @@ export function ProductCard({ product, onConfirm }: ProductCardProps) {
                     <h3 className="text-xl font-medium text-zinc-900 dark:text-white">
                         {product.name}
                     </h3>
-                    {!isGenericSearch && (
+                    {!isGenericSearch && typeof product.price === 'number' && (
                         <span className="text-lg font-semibold text-zinc-900 dark:text-white">
                             ¥{product.price.toFixed(2)}
                         </span>
@@ -37,6 +37,7 @@ export function ProductCard({ product, onConfirm }: ProductCardProps) {
 
             {/* Action Button */}
             <button
+                data-testid={isGenericSearch ? 'meituan-search-button' : 'buy-now-button'}
                 onClick={onConfirm}
                 className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-medium py-3 px-4 rounded-xl transition-colors duration-200"
             >
