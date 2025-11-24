@@ -1,4 +1,4 @@
-import * as AlipaySdk from 'alipay-sdk';
+import { AlipaySdk } from 'alipay-sdk';
 import { NextResponse } from 'next/server';
 import { ALIPAY_CONFIG } from '@/lib/alipay/config';
 
@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const params: Record<string, string> = {};
-    
+
     // 将 FormData 转换为对象
     formData.forEach((value, key) => {
       params[key] = value.toString();
@@ -16,8 +16,9 @@ export async function POST(req: Request) {
     console.log('支付宝回调参数:', params);
 
     // 验证签名
-    const sdk = new (AlipaySdk as any).default({
+    const sdk = new AlipaySdk({
       appId: ALIPAY_CONFIG.appId,
+      privateKey: ALIPAY_CONFIG.privateKey,
       alipayPublicKey: ALIPAY_CONFIG.alipayPublicKey,
     });
 

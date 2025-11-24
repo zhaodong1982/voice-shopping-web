@@ -1,10 +1,10 @@
-import * as AlipaySdk from 'alipay-sdk';
+import { AlipaySdk } from 'alipay-sdk';
 import { NextResponse } from 'next/server';
 import { ALIPAY_CONFIG, validateAlipayConfig } from '@/lib/alipay/config';
 import type { AlipayTradePagePayParams } from '@/lib/alipay/types';
 
 // 初始化支付宝 SDK
-let alipaySdk: any | null = null;
+let alipaySdk: AlipaySdk | null = null;
 
 function getAlipaySdk() {
   if (!alipaySdk) {
@@ -12,8 +12,8 @@ function getAlipaySdk() {
     if (!validation.isValid) {
       throw new Error(`支付宝配置不完整，缺少: ${validation.missing.join(', ')}`);
     }
-    
-    alipaySdk = new (AlipaySdk as any).default({
+
+    alipaySdk = new AlipaySdk({
       appId: ALIPAY_CONFIG.appId,
       privateKey: ALIPAY_CONFIG.privateKey,
       alipayPublicKey: ALIPAY_CONFIG.alipayPublicKey,

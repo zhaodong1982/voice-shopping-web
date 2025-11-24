@@ -34,10 +34,12 @@ export function PaymentModal({ paymentMethod, amount, productName, onSuccess }: 
     }, [countdown, isSuccess, paymentMethod, isProcessing, onSuccess]);
 
     const initiateAlipayPayment = async () => {
+        console.log('Initiating Alipay payment...');
         setIsProcessing(true);
 
         try {
             const outTradeNo = 'CF' + Date.now().toString();
+            console.log('Order ID:', outTradeNo);
 
             const response = await fetch('/api/alipay/pay', {
                 method: 'POST',
@@ -52,8 +54,10 @@ export function PaymentModal({ paymentMethod, amount, productName, onSuccess }: 
             });
 
             const data = await response.json();
+            console.log('Alipay API response:', data);
 
             if (data.error) {
+                console.error('Alipay API error:', data.error);
                 setErrorMessage(data.message || '创建支付订单失败');
                 setIsProcessing(false);
                 return;
@@ -61,11 +65,17 @@ export function PaymentModal({ paymentMethod, amount, productName, onSuccess }: 
 
             // 将支付表单 HTML 插入到页面并自动提交
             if (paymentFormRef.current && data.formData) {
+                console.log('Injecting payment form...');
                 paymentFormRef.current.innerHTML = data.formData;
                 const form = paymentFormRef.current.querySelector('form');
                 if (form) {
+                    console.log('Submitting payment form...');
                     form.submit();
+                } else {
+                    console.error('Form element not found in response data');
                 }
+            } else {
+                console.error('No formData received');
             }
         } catch (error) {
             console.error('支付宝支付失败:', error);

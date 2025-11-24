@@ -1,9 +1,9 @@
-import * as AlipaySdk from 'alipay-sdk';
+import { AlipaySdk } from 'alipay-sdk';
 import { NextResponse } from 'next/server';
 import { ALIPAY_CONFIG, validateAlipayConfig } from '@/lib/alipay/config';
 
 // 初始化支付宝 SDK
-let alipaySdk: any | null = null;
+let alipaySdk: AlipaySdk | null = null;
 
 function getAlipaySdk() {
   if (!alipaySdk) {
@@ -11,8 +11,8 @@ function getAlipaySdk() {
     if (!validation.isValid) {
       throw new Error(`支付宝配置不完整，缺少: ${validation.missing.join(', ')}`);
     }
-    
-    alipaySdk = new (AlipaySdk as any).default({
+
+    alipaySdk = new AlipaySdk({
       appId: ALIPAY_CONFIG.appId,
       privateKey: ALIPAY_CONFIG.privateKey,
       alipayPublicKey: ALIPAY_CONFIG.alipayPublicKey,
@@ -37,12 +37,13 @@ export async function GET(req: Request) {
     }
 
     const sdk = getAlipaySdk();
-    
+
     // 生成授权 URL
-    const authUrl = sdk.generatePageUrl('alipay.system.oauth.token', {
-      scope: 'auth_user',
-      redirect_uri: ALIPAY_CONFIG.returnUrl,
-    });
+    // 判断是否为沙箱环境
+    const isSandbox = ALIPAY_CONFIG.gateway.includes('alipaydev.com');
+    const authHost = isSandbox ? 'openauth.alipaydev.com' : 'openauth.alipay.com';
+
+    const authUrl = `https://${authHost}/oauth2/publicAppAuthorize.htm?app_id=${ALIPAY_CONFIG.appId}&scope=auth_user&redirect_uri=${encodeURIComponent(ALIPAY_CONFIG.returnUrl)}`;
 
     return NextResponse.json({
       authUrl,
@@ -83,8 +84,8 @@ export async function POST(req: Request) {
     const { accessToken, userId } = tokenResult;
 
     // 2. 使用 access_token 获取用户信息
-    const userInfoResult = await sdk.exec('alipay.user.info.share', {}, {
-      authToken: accessToken,
+    const userInfoResult = await sdk.exec('alipay.user.info.share', {
+      auth_token: accessToken,
     });
 
     return NextResponse.json({

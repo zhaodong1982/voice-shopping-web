@@ -34,7 +34,9 @@ export function CheckoutModal({ product, onClose, onConfirm }: CheckoutModalProp
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('Checkout form submitted');
         if (name && phone && address) {
+            console.log('Form valid, saving address and confirming order');
             // 保存地址
             saveAddress({
                 name,
@@ -43,7 +45,11 @@ export function CheckoutModal({ product, onClose, onConfirm }: CheckoutModalProp
                 isDefault: true,
             });
 
-            onConfirm({ name, phone, address, paymentMethod });
+            const orderData = { name, phone, address, paymentMethod };
+            console.log('Calling onConfirm with:', orderData);
+            onConfirm(orderData);
+        } else {
+            console.warn('Form invalid:', { name, phone, address });
         }
     };
 
